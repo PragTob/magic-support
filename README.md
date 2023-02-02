@@ -1,21 +1,13 @@
-# Magic
+# Magic Support
 
-**TODO: Add description**
+Some small niceties to help working with Magic. So far:
 
-## Installation
+* Get all the cards from all magic sets (via [Scryfall](https://scryfall.com/)) in csvs in an import friendly format, so that it'd be nice to put in and import (for now just Archidekt)
+* or just the cards from one set
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `magic` to your list of dependencies in `mix.exs`:
+## Setup
 
-```elixir
-def deps do
-  [
-    {:magic, "~> 0.1.0"}
-  ]
-end
-```
-
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at <https://hexdocs.pm/magic>.
-
+* Recent elixir & erlang (concrete versions see `.tool-versions`)
+* `mix deps.get`
+* `iex -S mix`
+* From here use the functions documented in the `Magic` module.
