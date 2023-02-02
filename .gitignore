@@ -27,3 +27,5 @@ magic-*.tar
 
 # do not version control the csvs
 /csvs
+# do not accidentally commit moved CSVs
+/*.csv
