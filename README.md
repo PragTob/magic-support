@@ -11,3 +11,8 @@ Some small niceties to help working with Magic. So far:
 * `mix deps.get`
 * `iex -S mix`
 * From here use the functions documented in the `Magic` module.
+
+## Dev
+
+"Omg Tobi, there are no tests"
+Relax, it's just a bunch of scripts :D
