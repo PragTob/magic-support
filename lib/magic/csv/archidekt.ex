@@ -20,15 +20,30 @@ defmodule Magic.CSV.Archidekt do
 
     data = [@headers | rows]
 
-    csv =
-      data
-      |> CSV.dump_to_iodata()
-      |> IO.iodata_to_binary()
+    {:ok, to_csv_binary(data)}
+  end
 
-    {:ok, csv}
+  defp to_csv_binary(data) do
+    data
+    |> CSV.dump_to_iodata()
+    |> IO.iodata_to_binary()
   end
 
   defp to_row(card) do
     [0, card.name, card.collector_number, card.set, card.set_name]
+  end
+
+  @doc """
+  Remove all 0 quantity rows from given CSV
+
+  Archidekt import doesn't like 0 quantity and defaults them to 1...
+  So, do this dance where we remove the rows.
+  """
+  def scrub_csv(file_path) do
+    file_path
+    |> File.stream!()
+    |> CSV.parse_stream(skip_headers: false)
+    |> Stream.reject(fn [quantity | _] -> quantity == "0" end)
+    |> to_csv_binary()
   end
 end

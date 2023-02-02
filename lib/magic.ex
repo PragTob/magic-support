@@ -29,4 +29,15 @@ defmodule Magic do
         IO.puts("encountered error: #{error}, while csv creating for #{set_code}")
     end
   end
+
+  @doc """
+  Given a dumped CSV file with 0-quantity rows, remove the 0 quantity rows.
+
+  Write result to $path_scrubbed.csv
+  """
+  def csv_scrub(file_path) do
+    new_contents = Magic.CSV.Archidekt.scrub_csv(file_path)
+    scrubbed_path = String.replace(file_path, ".csv", "_scrubbed.csv")
+    File.write!(scrubbed_path, new_contents)
+  end
 end
