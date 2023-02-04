@@ -30,6 +30,34 @@ defmodule Magic do
     end
   end
 
+  # https://mtgjson.com/api/v5/AllDeckFiles.tar.gz
+  def csv_dump_precons(folder_path) do
+    files = File.ls!(folder_path)
+
+    Enum.each(files, fn file ->
+      file_content = File.read!(file)
+
+      # can get overall set code from here again
+      %{"commander" => commander, "mainBoard" => main_deck} =
+        file_content |> Jason.decode!() |> Map.fetch!("data")
+
+      deck = commander ++ main_deck
+
+      cards =
+        Enum.map(deck, fn card ->
+          # look up set code to get set name, they should all be the same set though... right?
+          # or... we can just create and dump a file
+          %Magic.Card{
+            name: Map.fetch!(card, "name"),
+            collector_number: Map.fetch!(card, "number"),
+            set_code: Map.fetch!(card, "set_code"),
+            count: Map.fetch!(card, "count"),
+            foil: Map.fetch!(card, "isFoil")
+          }
+        end)
+    end)
+  end
+
   @doc """
   Given a dumped CSV file with 0-quantity rows, remove the 0 quantity rows.
 

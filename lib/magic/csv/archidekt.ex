@@ -30,7 +30,7 @@ defmodule Magic.CSV.Archidekt do
   end
 
   defp to_row(card) do
-    [0, card.name, card.collector_number, card.set, card.set_name]
+    [0, card.name, card.collector_number, card.set_code, card.set_name]
   end
 
   @doc """

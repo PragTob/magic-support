@@ -29,3 +29,5 @@ magic-*.tar
 /csvs
 # do not accidentally commit moved CSVs
 /*.csv
+
+/input
