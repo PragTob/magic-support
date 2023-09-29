@@ -31,3 +31,5 @@ magic-*.tar
 /*.csv
 
 /input
+/mine
+/jsons

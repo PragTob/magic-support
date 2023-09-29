@@ -19,25 +19,26 @@ defmodule Magic do
   def csv_dump(set_code) do
     path = "csvs/#{set_code}.csv"
     IO.puts("Dumping cards of #{set_code} to #{path}")
-    cards = Scryfall.Client.cards_from_set(set_code)
 
-    case Magic.CSV.Archidekt.to_csv(cards) do
-      {:ok, csv_contents} ->
-        File.write!(path, csv_contents)
+    cards =
+      set_code
+      |> Scryfall.Client.cards_from_set()
+      |> Enum.map(&Magic.Card.from/1)
 
-      {:error, error} ->
-        IO.puts("encountered error: #{error}, while csv creating for #{set_code}")
-    end
+    write_archidekt_csv(cards, path)
   end
 
   # https://mtgjson.com/api/v5/AllDeckFiles.tar.gz
-  def csv_dump_precons(folder_path) do
-    files = File.ls!(folder_path)
+  @precon_path "csvs/precons"
+  def csv_dump_precons(precons_json_folder_path \\ "jsons/precons") do
+    sets_map = build_sets_map()
+    files = File.ls!(precons_json_folder_path)
 
-    Enum.each(files, fn file ->
-      file_content = File.read!(file)
+    Enum.each(files, fn file_name ->
+      file_path = "#{precons_json_folder_path}/#{file_name}"
+      IO.puts("processing #{file_path}")
+      file_content = File.read!(file_path)
 
-      # can get overall set code from here again
       %{"commander" => commander, "mainBoard" => main_deck} =
         file_content |> Jason.decode!() |> Map.fetch!("data")
 
@@ -47,15 +48,38 @@ defmodule Magic do
         Enum.map(deck, fn card ->
           # look up set code to get set name, they should all be the same set though... right?
           # or... we can just create and dump a file
+          set_code = Map.fetch!(card, "setCode")
+
           %Magic.Card{
             name: Map.fetch!(card, "name"),
             collector_number: Map.fetch!(card, "number"),
-            set_code: Map.fetch!(card, "set_code"),
+            set_code: set_code,
+            set_name: Map.fetch!(sets_map, String.downcase(set_code)),
             count: Map.fetch!(card, "count"),
             foil: Map.fetch!(card, "isFoil")
           }
         end)
+
+      path = "#{@precon_path}/#{Path.basename(file_name)}.csv"
+
+      write_archidekt_csv(cards, path)
     end)
+  end
+
+  defp write_archidekt_csv(cards, path) do
+    case Magic.CSV.Archidekt.to_csv(cards) do
+      {:ok, csv_contents} ->
+        File.write!(path, csv_contents)
+
+      {:error, error} ->
+        IO.puts("encountered error: #{error}, while csv creating for #{path}")
+    end
+  end
+
+  defp build_sets_map do
+    sets = Scryfall.Client.sets()
+
+    Map.new(sets, fn set -> {Map.fetch!(set, "code"), Map.fetch!(set, "name")} end)
   end
 
   @doc """

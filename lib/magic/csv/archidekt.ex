@@ -6,17 +6,14 @@ defmodule Magic.CSV.Archidekt do
   """
   alias NimbleCSV.RFC4180, as: CSV
 
-  @headers ["Quantity", "Name", "Collector Number", "Set Code", "Set Name"]
+  @headers ["Quantity", "Name", "Collector Number", "Set Code", "Set Name", "Foil"]
 
   def to_csv(nil) do
     {:error, "nil cards"}
   end
 
   def to_csv(cards) do
-    rows =
-      cards
-      |> Enum.map(&Magic.Card.from/1)
-      |> Enum.map(&to_row/1)
+    rows = Enum.map(cards, &to_row/1)
 
     data = [@headers | rows]
 
@@ -30,7 +27,7 @@ defmodule Magic.CSV.Archidekt do
   end
 
   defp to_row(card) do
-    [0, card.name, card.collector_number, card.set_code, card.set_name]
+    [card.count, card.name, card.collector_number, card.set_code, card.set_name, card.foil]
   end
 
   @doc """
