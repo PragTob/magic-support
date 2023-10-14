@@ -20,7 +20,7 @@ defmodule Scryfall.Client do
         ]
       )
 
-    follow_pagination(response.body["data"], response.body["next_page"])
+    follow_pagination(response.body["data"], response.body["next_page"]) || []
   end
 
   defp follow_pagination(data, next_page_url)
