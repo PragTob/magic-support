@@ -17,7 +17,9 @@ defmodule Magic do
   File will be written to csvs/$set_code.csv
   """
   def csv_dump(set_code) do
-    path = "csvs/#{set_code}.csv"
+    folder = "csvs"
+    File.mkdir_p!(folder)
+    path = "#{folder}/#{set_code}.csv"
     IO.puts("Dumping cards of #{set_code} to #{path}")
 
     cards =
