@@ -1,4 +1,6 @@
 defmodule Magic do
+  alias Magic.CSV
+
   @doc """
   Fetch all the cards from all the sets and write them into $set-name.csv files.
   """
@@ -69,7 +71,7 @@ defmodule Magic do
   end
 
   defp write_archidekt_csv(cards, path) do
-    case Magic.CSV.Archidekt.to_csv(cards) do
+    case CSV.Archidekt.to_csv(cards) do
       {:ok, csv_contents} ->
         File.write!(path, csv_contents)
 
@@ -90,8 +92,25 @@ defmodule Magic do
   Write result to $path_scrubbed.csv
   """
   def csv_scrub(file_path) do
-    new_contents = Magic.CSV.Archidekt.scrub_csv(file_path)
+    new_contents = CSV.Archidekt.scrub_csv(file_path)
     scrubbed_path = String.replace(file_path, ".csv", "_scrubbed.csv")
     File.write!(scrubbed_path, new_contents)
+  end
+
+  # What cards are missing in the given collection from the given set
+  # One of each, not counting specialities I think
+  def missing_from(collection_csv_path, set_code) do
+    collection = CSV.ArchidektExport.to_cards(collection_csv_path)
+    # requires a previous dump from scryfall to be saved in given path
+    all_set_cards = CSV.Archidekt.from_csv("csvs/#{set_code}.csv")
+
+    our_set_cards =
+      collection
+      |> Enum.filter(fn card -> card.set_code == set_code end)
+      # we care that we have one of each
+      |> Enum.uniq_by(fn card -> card.collector_number end)
+
+    # MapSet for correct diff, sad we can't easily override uniqueness
+    all_set_cards -- our_set_cards
   end
 end

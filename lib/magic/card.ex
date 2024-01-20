@@ -4,6 +4,7 @@ defmodule Magic.Card do
     :set_code,
     :set_name,
     :collector_number,
+    :scryfall_id,
     foil: false,
     count: 0
   ]

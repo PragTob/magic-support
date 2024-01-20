@@ -4,6 +4,7 @@ defmodule Magic.CSV.Archidekt do
 
   cards - list of cards as returned from the Scryfall API.
   """
+  alias Magic.Card
   alias NimbleCSV.RFC4180, as: CSV
 
   @headers ["Quantity", "Name", "Collector Number", "Set Code", "Set Name", "Foil"]
@@ -42,5 +43,22 @@ defmodule Magic.CSV.Archidekt do
     |> CSV.parse_stream(skip_headers: false)
     |> Stream.reject(fn [quantity | _] -> quantity == "0" end)
     |> to_csv_binary()
+  end
+
+  def from_csv(file_path) do
+    file_path
+    |> File.stream!()
+    |> CSV.parse_stream()
+    |> Stream.map(fn [count, name, collector_number, set_code, set_name, foil] ->
+      %Card{
+        count: String.to_integer(count),
+        name: name,
+        collector_number: collector_number,
+        set_code: set_code,
+        set_name: set_name,
+        foil: foil
+      }
+    end)
+    |> Enum.to_list()
   end
 end
