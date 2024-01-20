@@ -1,4 +1,7 @@
 defmodule Scryfall.Client do
+  @doc """
+  https://scryfall.com/docs/api
+  """
   use Tesla
 
   plug(Tesla.Middleware.BaseUrl, "https://api.scryfall.com")
@@ -6,6 +9,13 @@ defmodule Scryfall.Client do
 
   def sets do
     get!("/sets").body["data"]
+  end
+
+  # unfinished, turned out no need
+  # enforce 75 cards limit
+  def cards(scryfall_ids) do
+    ids_body_data = Enum.map(scryfall_ids, fn id -> %{"id" => id} end)
+    post!("/cards/collection", %{identifies: ids_body_data}).body["data"]
   end
 
   def cards_from_set(set_code) do

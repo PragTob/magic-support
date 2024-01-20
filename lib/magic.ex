@@ -1,4 +1,5 @@
 defmodule Magic do
+  alias Magic.Card
   alias Magic.CSV
 
   @doc """
@@ -102,15 +103,36 @@ defmodule Magic do
   def missing_from(collection_csv_path, set_code) do
     collection = CSV.ArchidektExport.to_cards(collection_csv_path)
     # requires a previous dump from scryfall to be saved in given path
-    all_set_cards = CSV.Archidekt.from_csv("csvs/#{set_code}.csv")
+    all_set_cards =
+      set_code
+      |> Scryfall.Client.cards_from_set()
+      |> Enum.map(&Magic.Card.from/1)
+
+    normalized_set_cards = MapSet.new(all_set_cards, &Card.normalize_to_identity/1)
 
     our_set_cards =
       collection
       |> Enum.filter(fn card -> card.set_code == set_code end)
       # we care that we have one of each
       |> Enum.uniq_by(fn card -> card.collector_number end)
+      |> MapSet.new(&Card.normalize_to_identity/1)
 
     # MapSet for correct diff, sad we can't easily override uniqueness
-    all_set_cards -- our_set_cards
+    unowned_cards = MapSet.difference(normalized_set_cards, our_set_cards)
+    unowned_card_ids = unowned_cards |> MapSet.to_list() |> Enum.map(& &1.scryfall_id)
+
+    all_set_cards
+    |> Enum.filter(fn card -> card.scryfall_id in unowned_card_ids end)
+    |> print_cardmarket_wants()
+  end
+
+  defp print_cardmarket_wants(cards) do
+    cards
+    |> Enum.sort_by(& &1.name)
+    |> Enum.each(fn card ->
+      IO.puts(
+        "1x #{card.name} (#{card.set_name}) -- #{card.collector_number} - #{card.price_eur}"
+      )
+    end)
   end
 end
