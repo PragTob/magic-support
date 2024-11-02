@@ -34,6 +34,7 @@ defmodule Magic do
   end
 
   # https://mtgjson.com/api/v5/AllDeckFiles.tar.gz
+  # functionality isn't really developed since I found the precons on archidekt
   @precon_path "csvs/precons"
   def csv_dump_precons(precons_json_folder_path \\ "jsons/precons") do
     sets_map = build_sets_map()
