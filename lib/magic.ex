@@ -163,12 +163,59 @@ defmodule Magic do
   end
 
   # limit to the most recent ones and so not to blow up the API
-  def fetch_and_dump_secret_lairs(limit \\ 10) do
+  def fetch_and_dump_secret_lairs(opts \\ []) do
+    limit = Access.get(opts, :limit, 10)
+    dbg = Access.get(opts, :dbg, false)
+
     secret_lair_data =
       Scryfall.Scraper.sld_overview_parsed()
       |> Enum.take(limit)
       |> Enum.map(&Magic.SecretLairDrop.from/1)
 
-    dbg(secret_lair_data)
+    if dbg, do: dbg(secret_lair_data)
+    print_secret_lair_report(secret_lair_data)
+  end
+
+  defp print_secret_lair_report(secret_lairs) do
+    Enum.map_join(secret_lairs, "\n---------------------\n\n", fn secret_lair ->
+      """
+      ## #{secret_lair.name}
+      Total Price: #{price_string(secret_lair.total_price)}
+      Cheapest:    #{price_string(secret_lair.cheapest_total_others)}
+
+      ### Cards
+      #{card_report(secret_lair.card_data)}
+      """
+      |> String.trim_leading()
+    end)
+    |> IO.puts()
+  end
+
+  defp price_string(%{"eur" => eur, "eur_foil" => eur_foil, "usd" => usd, "usd_foil" => usd_foil}) do
+    "#{price(eur)} EUR / #{price(eur_foil)} FOIL EUR / #{price(usd)} USD / #{price(usd_foil)} FOIL USD "
+  end
+
+  defp price(price_value)
+  defp price(nil), do: "N/A"
+  defp price(%Decimal{} = decimal), do: to_string(decimal)
+  defp price({%Decimal{} = decimal, missing: missing}), do: "#{decimal} (Missing: #{missing})"
+
+  defp card_report(card_data) do
+    Enum.map_join(card_data, "\n", fn card_datum ->
+      normalized_prices =
+        Map.new(card_datum.cheapest_alternatives, fn {price_key, alternative} ->
+          if alternative do
+            {price_key, alternative.price}
+          else
+            {price_key, nil}
+          end
+        end)
+
+      """
+      #### #{card_datum.card.name}
+      Prices: #{price_string(card_datum.card.prices)}
+      Cheap:  #{price_string(normalized_prices)}
+      """
+    end)
   end
 end
