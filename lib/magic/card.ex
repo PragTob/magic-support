@@ -18,13 +18,27 @@ defmodule Magic.Card do
 
     %__MODULE__{
       name: Map.fetch!(scryfall_json, "name"),
-      oracle_id: Map.fetch!(scryfall_json, "oracle_id"),
+      oracle_id: oracle_id(scryfall_json),
       set_code: Map.fetch!(scryfall_json, "set"),
       set_name: Map.fetch!(scryfall_json, "set_name"),
       collector_number: Map.fetch!(scryfall_json, "collector_number"),
       scryfall_id: Map.fetch!(scryfall_json, "id"),
       prices: Map.new(prices, fn {key, price} -> {key, price(price)} end)
     }
+  end
+
+  defp oracle_id(scryfall_json) do
+    # not sure about the fallback, but this code is based on the experience from:
+    # https://api.scryfall.com/cards/d74a72a2-d46a-41c2-a400-70571197b020
+    Map.get_lazy(scryfall_json, "oracle_id", fn ->
+      [oracle_id] =
+        scryfall_json
+        |> Map.fetch!("card_faces")
+        |> Enum.map(& &1["oracle_id"])
+        |> Enum.uniq()
+
+      oracle_id
+    end)
   end
 
   defp price(price) do
