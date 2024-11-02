@@ -86,7 +86,7 @@ defmodule Magic.CardData do
     alternatives
     |> Enum.reject(&is_nil(&1.prices[price_key]))
     |> safe_min_by(& &1.prices[price_key], Decimal)
-    |> Magic.CardData.Alternative.from()
+    |> Magic.CardData.Alternative.from(price_key)
   end
 
   defp safe_min_by(collection, function, comparator)
@@ -97,14 +97,18 @@ defmodule Magic.CardData do
 
   defmodule Alternative do
     # prices like the scryfall price data
-    @keys [:scryfall_id, :set_code, :collector_number, :prices]
-    defstruct @keys
+    @shared_keys [:scryfall_id, :set_code, :collector_number]
+    defstruct [:price | @shared_keys]
 
-    def from(%Magic.Card{} = card) do
-      overlap = Map.take(card, @keys)
+    def from(%Magic.Card{} = card, price_key) do
+      overlap =
+        card
+        |> Map.take(@shared_keys)
+        |> Map.put(:price, Map.fetch!(card.prices, price_key))
+
       struct!(__MODULE__, overlap)
     end
 
-    def from(nil), do: nil
+    def from(nil, _), do: nil
   end
 end
