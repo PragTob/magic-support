@@ -23,7 +23,6 @@ defmodule Scryfall.Scraper do
 
   def sld_overview_parsed do
     body = sld_overview().body
-    File.write!("sld.html", body)
     extract_titles_and_links(body)
   end
 

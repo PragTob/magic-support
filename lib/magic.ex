@@ -153,11 +153,22 @@ defmodule Magic do
   end
 
   def other_printings(%Magic.Card{} = card) do
+    # curiously this returns `nil` not empty list, so let's empty list it
     results =
-      Scryfall.Client.get!("cards/search",
+      Scryfall.Client.get_body("cards/search",
         query: [unique: :prints, q: "oracleid:#{card.oracle_id} -scryfall_id:#{card.scryfall_id}"]
-      ).body["data"]
+      ) || []
 
     Enum.map(results, &Magic.Card.from/1)
+  end
+
+  # limit to the most recent ones and so not to blow up the API
+  def fetch_and_dump_secret_lairs(limit \\ 10) do
+    secret_lair_data =
+      Scryfall.Scraper.sld_overview_parsed()
+      |> Enum.take(limit)
+      |> Enum.map(&Magic.SecretLairDrop.from/1)
+
+    dbg(secret_lair_data)
   end
 end

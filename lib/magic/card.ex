@@ -55,6 +55,13 @@ defmodule Magic.CardData do
   end
 
   @interested_prices ["eur", "eur_foil", "usd", "usd_foil"]
+
+  @no_alternatives Map.new(@interested_prices, fn key -> {key, nil} end)
+
+  defp build_cheapest_alternatives([]) do
+    @no_alternatives
+  end
+
   defp build_cheapest_alternatives(alternatives) do
     Map.new(@interested_prices, fn price_key ->
       {price_key, cheapest_alternative(alternatives, price_key)}
@@ -64,9 +71,15 @@ defmodule Magic.CardData do
   defp cheapest_alternative(alternatives, price_key) do
     alternatives
     |> Enum.reject(&is_nil(&1.prices[price_key]))
-    |> Enum.min_by(& &1.prices[price_key], Decimal)
+    |> safe_min_by(& &1.prices[price_key], Decimal)
     |> Magic.CardData.Alternative.from()
   end
+
+  defp safe_min_by(collection, function, comparator)
+  defp safe_min_by([], _function, _comparator), do: nil
+
+  defp safe_min_by(collection, function, comparator),
+    do: Enum.min_by(collection, function, comparator)
 
   defmodule Alternative do
     # prices like the scryfall price data
@@ -77,5 +90,7 @@ defmodule Magic.CardData do
       overlap = Map.take(card, @keys)
       struct!(__MODULE__, overlap)
     end
+
+    def from(nil), do: nil
   end
 end

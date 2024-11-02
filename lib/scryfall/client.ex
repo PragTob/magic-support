@@ -11,6 +11,10 @@ defmodule Scryfall.Client do
     get!("/sets").body["data"]
   end
 
+  def get_body(url, opts \\ []) do
+    get!(url, opts).body["data"]
+  end
+
   # unfinished, turned out no need
   # enforce 75 cards limit
   def cards(scryfall_ids) do
