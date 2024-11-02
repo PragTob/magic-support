@@ -28,7 +28,9 @@ defmodule Magic.MixProject do
 
       # optional, required by JSON middleware
       {:jason, ">= 1.0.0"},
-      {:nimble_csv, "~> 1.1"}
+      {:nimble_csv, "~> 1.1"},
+      {:map_diff, "~> 1.3"},
+      {:decimal, "~> 2.1"}
     ]
   end
 end

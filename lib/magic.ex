@@ -107,6 +107,7 @@ defmodule Magic do
       set_code
       |> Scryfall.Client.cards_from_set()
       |> Enum.map(&Magic.Card.from/1)
+      |> Enum.uniq_by(fn card -> card.name end)
 
     normalized_set_cards = MapSet.new(all_set_cards, &Card.normalize_to_identity/1)
 
@@ -114,15 +115,15 @@ defmodule Magic do
       collection
       |> Enum.filter(fn card -> card.set_code == set_code end)
       # we care that we have one of each
-      |> Enum.uniq_by(fn card -> card.collector_number end)
+      |> Enum.uniq_by(fn card -> card.name end)
       |> MapSet.new(&Card.normalize_to_identity/1)
 
     # MapSet for correct diff, sad we can't easily override uniqueness
     unowned_cards = MapSet.difference(normalized_set_cards, our_set_cards)
-    unowned_card_ids = unowned_cards |> MapSet.to_list() |> Enum.map(& &1.scryfall_id)
+    unowned_card_names = unowned_cards |> MapSet.to_list() |> Enum.map(& &1.name)
 
     all_set_cards
-    |> Enum.filter(fn card -> card.scryfall_id in unowned_card_ids end)
+    |> Enum.filter(fn card -> card.name in unowned_card_names end)
     |> print_cardmarket_wants()
   end
 
@@ -130,9 +131,23 @@ defmodule Magic do
     cards
     |> Enum.sort_by(& &1.name)
     |> Enum.each(fn card ->
-      IO.puts(
-        "1x #{card.name} (#{card.set_name}) -- #{card.collector_number} - #{card.price_eur}"
-      )
+      IO.puts("1x #{card.name} (#{card.set_name}) -- #{card.price_eur}")
     end)
+
+    total_price =
+      cards
+      |> Enum.map(& &1.price_eur)
+      |> Enum.reduce(Decimal.new(0), fn item, sum ->
+        case item do
+          nil ->
+            IO.puts("skipped an unknon price")
+            sum
+
+          item ->
+            Decimal.add(sum, item)
+        end
+      end)
+
+    IO.puts("\n#{total_price}")
   end
 end

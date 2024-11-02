@@ -17,16 +17,23 @@ defmodule Magic.Card do
       set_name: Map.fetch!(scryfall_json, "set_name"),
       collector_number: Map.fetch!(scryfall_json, "collector_number"),
       scryfall_id: Map.fetch!(scryfall_json, "id"),
-      price_eur: get_in(scryfall_json, ["prices", "eur"])
+      price_eur: price_eur(scryfall_json)
     }
+  end
+
+  defp price_eur(scryfall_json) do
+    price = get_in(scryfall_json, ["prices", "eur"])
+
+    case price do
+      nil -> nil
+      eurs -> Decimal.new(eurs)
+    end
   end
 
   def normalize_to_identity(card) do
     %__MODULE__{
       name: card.name,
-      set_code: card.set_code,
-      collector_number: card.collector_number,
-      scryfall_id: card.scryfall_id
+      set_code: card.set_code
     }
   end
 end
