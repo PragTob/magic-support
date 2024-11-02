@@ -30,7 +30,8 @@ defmodule Magic.MixProject do
       {:jason, ">= 1.0.0"},
       {:nimble_csv, "~> 1.1"},
       {:map_diff, "~> 1.3"},
-      {:decimal, "~> 2.1"}
+      {:decimal, "~> 2.1"},
+      {:floki, "~> 0.36.0"}
     ]
   end
 end

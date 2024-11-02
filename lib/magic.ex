@@ -131,12 +131,12 @@ defmodule Magic do
     cards
     |> Enum.sort_by(& &1.name)
     |> Enum.each(fn card ->
-      IO.puts("1x #{card.name} (#{card.set_name}) -- #{card.price_eur}")
+      IO.puts("1x #{card.name} (#{card.set_name}) -- #{card.prices["eur"]}")
     end)
 
     total_price =
       cards
-      |> Enum.map(& &1.price_eur)
+      |> Enum.map(& &1.prices["eur"])
       |> Enum.reduce(Decimal.new(0), fn item, sum ->
         case item do
           nil ->
@@ -149,5 +149,14 @@ defmodule Magic do
       end)
 
     IO.puts("\n#{total_price}")
+  end
+
+  def other_printings(%Magic.Card{} = card) do
+    results =
+      Scryfall.Client.get!("cards/search",
+        query: [unique: :prints, q: "oracleid:#{card.oracle_id} -scryfall_id:#{card.scryfall_id}"]
+      ).body["data"]
+
+    Enum.map(results, &Magic.Card.from/1)
   end
 end
